@@ -1,0 +1,948 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Answer {
+  answer_id: ID!
+  answer_image: String
+  answer_text: String!
+  blank_position: Int
+  is_correct: Boolean!
+  match_key: String
+  order: Int!
+  question: Question!
+  question_id: String!
+}
+
+type CartItem {
+  added_at: DateTime!
+  cart_item_id: ID!
+  course: Course!
+  course_id: String!
+  selected: Boolean!
+  user: User!
+  user_id: String!
+}
+
+input CartItemOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Category {
+  _count: CategoryCount!
+  category_id: ID!
+  combos: [CategoryCombo!]
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  sort_order: Int!
+  title: String!
+  updated_at: DateTime!
+  updated_by: String
+}
+
+type CategoryCombo {
+  category: Category!
+  category_id: String!
+  combo: Combo!
+  combo_id: String!
+  id: ID!
+}
+
+type CategoryCount {
+  combos: Int!
+}
+
+type Combo {
+  _count: ComboCount!
+  categories: [CategoryCombo!]
+  combo_id: ID!
+  combo_name: String!
+  combo_type: Int!
+  courses: [ComboCourse!]
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  discount_vouchers: [DiscountVoucherItem!]
+  order_items: [OrderItem!]
+  original_price: Int!
+  price: Int!
+  updated_at: DateTime!
+  updated_by: String
+}
+
+type ComboCount {
+  categories: Int!
+  courses: Int!
+  discount_vouchers: Int!
+  order_items: Int!
+}
+
+type ComboCourse {
+  combo: Combo!
+  combo_id: String!
+  course: Course!
+  course_id: String!
+  del_flg: Boolean!
+  id: ID!
+}
+
+type Comment {
+  _count: CommentCount!
+  comment_id: ID!
+  content: String!
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  image_url: String
+  is_hidden: Boolean!
+  lesson: Lesson
+  lesson_id: String
+  parent: Comment
+  parent_id: String
+  replies: [Comment!]
+  seed_tag: String
+  updated_at: DateTime!
+  updated_by: String
+  user: User
+  user_id: String
+}
+
+type CommentCount {
+  replies: Int!
+}
+
+input CommentOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Course {
+  _count: CourseCount!
+  access_duration_months: Int
+  access_expire_at: DateTime
+  access_type: Int!
+  cart_items: [CartItem!]
+  combos: [ComboCourse!]
+  comments: [Comment!]
+  courseReviews: [CourseReview!]
+  course_description: String!
+  course_id: ID!
+  course_name: String!
+  course_original_price: Int!
+  course_price: Int!
+  course_view: [CourseView!]
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  discount_vouchers: [DiscountVoucherItem!]
+  notifications: [Notification!]
+  order_items: [OrderItem!]
+  quizzes: [Quiz!]
+  ratingSummary: RatingSummary
+  reports: [Report!]
+  sections: [Section!]
+  state: String!
+  target: String
+  thumbnail: String
+  updated_at: DateTime!
+  updated_by: String
+  user_courses: [UserCourse!]
+  user_lesson_progress: [UserLessonProgress!]
+  user_quiz_progress: [UserQuizProgress!]
+  view_count: Int!
+}
+
+type CourseCount {
+  cart_items: Int!
+  combos: Int!
+  comments: Int!
+  courseReviews: Int!
+  course_view: Int!
+  discount_vouchers: Int!
+  notifications: Int!
+  order_items: Int!
+  quizzes: Int!
+  reports: Int!
+  sections: Int!
+  user_courses: Int!
+  user_lesson_progress: Int!
+  user_quiz_progress: Int!
+}
+
+type CourseReview {
+  comment: String
+  course: Course!
+  course_id: String!
+  created_at: DateTime!
+  id: ID!
+  rating: Int!
+  updated_at: DateTime!
+  user: User!
+  user_id: String!
+}
+
+input CourseReviewOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type CourseView {
+  course: Course!
+  course_id: String!
+  created_at: DateTime!
+  id: ID!
+  ip_address: String
+  user: User
+  user_agent: String
+  user_id: String
+}
+
+input CourseViewOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input CreateUserInput {
+  """address"""
+  address: String
+
+  """avatar"""
+  avatar: String
+
+  """email"""
+  email: String!
+
+  """name"""
+  name: String
+
+  """password"""
+  password: String
+
+  """phone"""
+  phone: String
+
+  """"""
+  type: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DiscountVoucher {
+  _count: DiscountVoucherCount!
+  applicable_items: [DiscountVoucherItem!]
+  applicable_type: Int!
+  applicable_users: [DiscountVoucherUser!]
+  code: String!
+  created_at: DateTime!
+  discount_type: Int!
+  discount_value: Int!
+  discount_voucher_id: ID!
+  end_date: DateTime
+  min_order_amount: Int
+  order: [Order!]
+  per_user_limit: Int
+  start_date: DateTime!
+  status: Int!
+  updated_at: DateTime
+  usage_limit: Int
+  used_by: [DiscountVoucherUsage!]
+  used_count: Int!
+  user_scope: Int!
+}
+
+type DiscountVoucherCount {
+  applicable_items: Int!
+  applicable_users: Int!
+  order: Int!
+  used_by: Int!
+}
+
+type DiscountVoucherItem {
+  combo: Combo
+  combo_id: String
+  course: Course
+  course_id: String
+  discount_voucher_id: String!
+  id: ID!
+  voucher: DiscountVoucher!
+}
+
+type DiscountVoucherUsage {
+  discount_voucher_id: String!
+  order: Order
+  order_id: String
+  used_at: DateTime!
+  user: User!
+  user_id: String!
+  voucher: DiscountVoucher!
+  voucher_usage_id: ID!
+}
+
+input DiscountVoucherUsageOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type DiscountVoucherUser {
+  discount_voucher_id: String!
+  id: ID!
+  user: User!
+  user_id: String!
+  voucher: DiscountVoucher!
+}
+
+input DiscountVoucherUserOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Document {
+  created_at: DateTime!
+  document_id: ID!
+  document_name: String!
+  document_url: String!
+  extension: String!
+  isDownloadable: Boolean!
+  lesson: Lesson!
+  lesson_id: String!
+  size: Int!
+  updated_at: DateTime!
+}
+
+input FilterUserInput {
+  orderBy: UserOrderByWithRelationInput
+
+  """"""
+  page: Int! = 1
+  pageSize: Int = 25
+
+  """"""
+  search: String
+
+  """"""
+  type: String
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type Lesson {
+  _count: LessonCount!
+  access_type: Int!
+  comments: [Comment!]
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  documents: [Document!]
+  lesson_id: ID!
+  lesson_order: Int!
+  lesson_quizzes: [LessonQuiz!]
+  lesson_thumbnail: String
+  lesson_title: String!
+  lesson_type: Int!
+  lesson_video: String
+  minutes: Int!
+  notes: [Note!]
+  notifications: [Notification!]
+  reports: [Report!]
+  section: Section!
+  section_id: String!
+  updated_at: DateTime!
+  updated_by: String
+  user_lesson_progress: [UserLessonProgress!]
+  user_quiz_progress: [UserQuizProgress!]
+  video_duration: Int!
+}
+
+type LessonCount {
+  comments: Int!
+  documents: Int!
+  lesson_quizzes: Int!
+  notes: Int!
+  notifications: Int!
+  reports: Int!
+  user_lesson_progress: Int!
+  user_quiz_progress: Int!
+}
+
+type LessonQuiz {
+  created_at: DateTime!
+  id: ID!
+  lesson: Lesson!
+  lesson_id: String!
+  order: Int!
+  quiz: Quiz!
+  quiz_id: String!
+}
+
+type MSystem {
+  category: String
+  create_at: DateTime
+  created_by: String
+  del_flg: Int
+  id: ID!
+  param_key: String!
+  param_name: String!
+  param_no: String!
+  param_value: String!
+  sort: Int
+  updated_at: DateTime
+  updated_by: String
+}
+
+type Mutation {
+  changePassword(currentPassword: String!, newPassword: String!): User
+  changePasswordAdmin(currentPassword: String!, newPassword: String!): User
+  createUser(payload: CreateUserInput!): User
+  removeUser(ids: [String!]!): Boolean
+  updateUser(payload: UpdateUserInput!): User
+  updateUserType(id: String!, type: String!): User
+}
+
+type Note {
+  background_color: String
+  content: String!
+  created_at: DateTime!
+  del_flg: Boolean!
+  lesson: Lesson!
+  lesson_id: String!
+  note_id: ID!
+  timestamp: Int!
+  updated_at: DateTime!
+  user: User!
+  user_id: String!
+}
+
+input NoteOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Notification {
+  _count: NotificationCount!
+  action_url: String
+  context: String
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  del_flg: Boolean!
+  lesson: Lesson
+  lesson_id: String
+  message: String!
+  notification_id: ID!
+  status: Int!
+  title: String!
+  type: Int!
+  updated_at: DateTime
+  user: User
+  userNotifications: [UserNotification!]
+  user_id: String
+  user_type: String
+}
+
+type NotificationCount {
+  userNotifications: Int!
+}
+
+input NotificationOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Order {
+  _count: OrderCount!
+  created_at: DateTime!
+  discount_voucher: DiscountVoucher
+  discount_voucher_id: String
+  discount_vouchers: [DiscountVoucherUsage!]
+  order_id: ID!
+  order_items: [OrderItem!]
+  payment_method: Int
+  status: Int!
+  total_price: Int!
+  updated_at: DateTime
+  user: User!
+  user_id: String!
+}
+
+type OrderCount {
+  discount_vouchers: Int!
+  order_items: Int!
+}
+
+type OrderItem {
+  combo: Combo
+  combo_id: String
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  del_flg: Boolean!
+  final_price: Int!
+  item_type: Int!
+  order: Order!
+  order_id: String!
+  order_item_id: ID!
+  updated_at: DateTime
+}
+
+input OrderOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Query {
+  countUser(filters: FilterUserInput!): Int
+  msystem(param_no: String!): MSystem!
+  users(filters: FilterUserInput!): [User!]
+  whoAmI: User!
+  whoAmIAdmin: User!
+}
+
+type Question {
+  _count: QuestionCount!
+  answers: [Answer!]
+  audio: QuizAudio
+  audio_id: String
+  audio_order: Int
+  created_at: DateTime!
+  del_flg: Boolean!
+  difficulty: Int!
+  explanation: String
+  order: Int!
+  points: Int!
+  question_id: ID!
+  question_image: String
+  question_text: String!
+  question_type: Int!
+  quiz: Quiz
+  quiz_id: String
+  reading_passage: ReadingPassage
+  reading_passage_id: String
+  updated_at: DateTime!
+  user_answers: [UserQuizAnswer!]
+}
+
+type QuestionCount {
+  answers: Int!
+  user_answers: Int!
+}
+
+type Quiz {
+  _count: QuizCount!
+  allow_retake: Boolean!
+  allow_review: Boolean!
+  audios: [QuizAudio!]
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  del_flg: Boolean!
+  difficulty_level: Int!
+  duration_minutes: Int
+  has_audio: Boolean!
+  is_latest_version: Boolean!
+  lesson_id: String
+  max_attempts: Int
+  parent_quiz: Quiz
+  parent_quiz_id: String
+  passing_score: Int!
+  question_count: Int!
+  questions: [Question!]
+  quiz_id: ID!
+  quiz_lessons: [LessonQuiz!]
+  quiz_type: Int!
+  quiz_versions: [Quiz!]
+  randomize_answers: Boolean!
+  randomize_questions: Boolean!
+  show_explanation: Boolean!
+  show_results: Boolean!
+  status: Int!
+  title: String!
+  total_points: Int!
+  total_questions: Int!
+  updated_at: DateTime!
+  user_progress: [UserQuizProgress!]
+  version: Int!
+  version_notes: String
+}
+
+type QuizAudio {
+  _count: QuizAudioCount!
+  audio_id: ID!
+  audio_url: String!
+  created_at: DateTime!
+  duration_seconds: Int!
+  file_name: String!
+  question_ordering: JSON
+  questions: [Question!]
+  quiz: Quiz!
+  quiz_id: String!
+  title: String
+  total_questions: Int!
+  transcript: String
+}
+
+type QuizAudioCount {
+  questions: Int!
+}
+
+type QuizCount {
+  audios: Int!
+  questions: Int!
+  quiz_lessons: Int!
+  quiz_versions: Int!
+  user_progress: Int!
+}
+
+type RatingSummary {
+  avg_rating: Float!
+  course: Course!
+  course_id: String!
+  id: ID!
+  rating_1_count: Int!
+  rating_2_count: Int!
+  rating_3_count: Int!
+  rating_4_count: Int!
+  rating_5_count: Int!
+  total_reviews: Int!
+  updated_at: DateTime!
+}
+
+type ReadingPassage {
+  _count: ReadingPassageCount!
+  content: String!
+  created_at: DateTime!
+  created_by: String
+  difficulty: Int!
+  question_ordering: JSON
+  questions: [Question!]
+  reading_passage_id: ID!
+  tags: [String!]
+  title: String
+  total_questions: Int!
+  updated_at: DateTime!
+  updated_by: String
+}
+
+type ReadingPassageCount {
+  questions: Int!
+}
+
+type Report {
+  _count: ReportCount!
+  allow_contact: Boolean!
+  category: Int!
+  comments: [ReportComment!]
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  del_flg: Boolean!
+  description: String!
+  is_anonymous: Boolean!
+  lesson: Lesson
+  lesson_id: String
+  priority: Int!
+  report_id: ID!
+  report_type: Int!
+  resolution_notes: String
+  resolved_at: DateTime
+  resolved_by: String
+  resolver: User
+  screenshot_urls: [String!]
+  status: Int!
+  title: String!
+  updated_at: DateTime!
+  user: User
+  user_id: String
+}
+
+type ReportComment {
+  comment_id: ID!
+  content: String!
+  created_at: DateTime!
+  report: Report!
+  report_id: String!
+  user: User
+  user_id: String
+}
+
+input ReportCommentOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type ReportCount {
+  comments: Int!
+}
+
+input ReportOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type Section {
+  _count: SectionCount!
+  course: Course!
+  course_id: String!
+  created_at: DateTime!
+  created_by: String
+  del_flg: Boolean!
+  lessons: [Lesson!]
+  section_id: ID!
+  section_title: String!
+  updated_at: DateTime!
+  updated_by: String
+}
+
+type SectionCount {
+  lessons: Int!
+}
+
+enum SortOrder {
+  asc
+  desc
+}
+
+input UpdateUserInput {
+  """address"""
+  address: String
+
+  """avatar"""
+  avatar: String
+
+  """email"""
+  email: String
+  id: String!
+
+  """name"""
+  name: String
+
+  """password"""
+  password: String
+
+  """phone"""
+  phone: String
+
+  """"""
+  type: String
+}
+
+type User {
+  _count: UserCount!
+  address: String
+  allowed_discount_vouchers: [DiscountVoucherUser!]
+  avatar: String
+  cartItems: [CartItem!]
+  comments: [Comment!]
+  courseReviews: [CourseReview!]
+  course_view: [CourseView!]
+  created_at: DateTime!
+  created_by: User
+  created_by_id: String
+  createds: [User!]
+  deleted: Boolean
+  deleted_at: DateTime
+  deleted_by: User
+  deleted_by_id: String
+  deleteds: [User!]
+  discount_vouchers: [DiscountVoucherUsage!]
+  email: String!
+  googleId: String
+  id: ID!
+  name: String
+  notes: [Note!]
+  notifications: [Notification!]
+  orders: [Order!]
+  password: String
+  passwordResetExpires: DateTime
+  passwordResetToken: String
+  phone: String
+  quiz_progress: [UserQuizProgress!]
+  reportComments: [ReportComment!]
+  reports: [Report!]
+  resolved_reports: [Report!]
+  type: String
+  updated_at: DateTime!
+  updated_by: User
+  updated_by_id: String
+  updateds: [User!]
+  userNotifications: [UserNotification!]
+  user_courses: [UserCourse!]
+  user_lesson_progress: [UserLessonProgress!]
+  verified: Boolean!
+  verifyExpires: DateTime
+  verifyToken: String
+}
+
+type UserCount {
+  allowed_discount_vouchers: Int!
+  cartItems: Int!
+  comments: Int!
+  courseReviews: Int!
+  course_view: Int!
+  createds: Int!
+  deleteds: Int!
+  discount_vouchers: Int!
+  notes: Int!
+  notifications: Int!
+  orders: Int!
+  quiz_progress: Int!
+  reportComments: Int!
+  reports: Int!
+  resolved_reports: Int!
+  updateds: Int!
+  userNotifications: Int!
+  user_courses: Int!
+  user_lesson_progress: Int!
+}
+
+type UserCourse {
+  course: Course!
+  course_id: String!
+  created_at: DateTime!
+  del_flg: Boolean!
+  enrolled_at: DateTime
+  expired_date: DateTime
+  id: ID!
+  last_accessed: DateTime
+  pause_count: Int!
+  pause_until: DateTime
+  paused_at: DateTime
+  status: Int!
+  total_paused_days: Int!
+  user: User!
+  user_id: String!
+}
+
+input UserCourseOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type UserLessonProgress {
+  completed: Int!
+  course: Course!
+  course_id: String!
+  created_at: DateTime!
+  id: ID!
+  last_accessed: DateTime
+  lesson: Lesson!
+  lesson_id: String!
+  segments: JSON
+  updated_at: DateTime!
+  user: User!
+  user_id: String!
+  watched_seconds: Int!
+}
+
+input UserLessonProgressOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+type UserNotification {
+  id: ID!
+  notification: Notification!
+  notification_id: String!
+  read_at: DateTime
+  status: Int!
+  user: User!
+  user_id: String!
+}
+
+input UserNotificationOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input UserOrderByRelationAggregateInput {
+  _count: SortOrder
+}
+
+input UserOrderByWithRelationInput {
+  address: SortOrder
+  allowed_discount_vouchers: DiscountVoucherUserOrderByRelationAggregateInput
+  avatar: SortOrder
+  cartItems: CartItemOrderByRelationAggregateInput
+  comments: CommentOrderByRelationAggregateInput
+  courseReviews: CourseReviewOrderByRelationAggregateInput
+  course_view: CourseViewOrderByRelationAggregateInput
+  created_at: SortOrder
+  created_by: UserOrderByWithRelationInput
+  created_by_id: SortOrder
+  createds: UserOrderByRelationAggregateInput
+  deleted: SortOrder
+  deleted_at: SortOrder
+  deleted_by: UserOrderByWithRelationInput
+  deleted_by_id: SortOrder
+  deleteds: UserOrderByRelationAggregateInput
+  discount_vouchers: DiscountVoucherUsageOrderByRelationAggregateInput
+  email: SortOrder
+  googleId: SortOrder
+  id: SortOrder
+  name: SortOrder
+  notes: NoteOrderByRelationAggregateInput
+  notifications: NotificationOrderByRelationAggregateInput
+  orders: OrderOrderByRelationAggregateInput
+  password: SortOrder
+  passwordResetExpires: SortOrder
+  passwordResetToken: SortOrder
+  phone: SortOrder
+  quiz_progress: UserQuizProgressOrderByRelationAggregateInput
+  reportComments: ReportCommentOrderByRelationAggregateInput
+  reports: ReportOrderByRelationAggregateInput
+  resolved_reports: ReportOrderByRelationAggregateInput
+  type: SortOrder
+  updated_at: SortOrder
+  updated_by: UserOrderByWithRelationInput
+  updated_by_id: SortOrder
+  updateds: UserOrderByRelationAggregateInput
+  userNotifications: UserNotificationOrderByRelationAggregateInput
+  user_courses: UserCourseOrderByRelationAggregateInput
+  user_lesson_progress: UserLessonProgressOrderByRelationAggregateInput
+  verified: SortOrder
+  verifyExpires: SortOrder
+  verifyToken: SortOrder
+}
+
+type UserQuizAnswer {
+  answer_text: String
+  created_at: DateTime!
+  id: ID!
+  is_correct: Boolean!
+  points_earned: Float!
+  progress: UserQuizProgress!
+  progress_id: String!
+  question: Question!
+  question_id: String!
+  selected_answer_ids: [String!]
+  time_spent: Int
+}
+
+type UserQuizProgress {
+  _count: UserQuizProgressCount!
+  answers: [UserQuizAnswer!]
+  attempts: Int!
+  completed_at: DateTime
+  correct_answers: Int!
+  course: Course
+  course_id: String
+  created_at: DateTime!
+  lesson: Lesson
+  lesson_id: String
+  passed: Boolean!
+  percentage: Float
+  progress_id: ID!
+  quiz: Quiz!
+  quiz_id: String!
+  score: Float
+  started_at: DateTime!
+  status: Int!
+  time_spent: Int
+  total_questions: Int!
+  updated_at: DateTime!
+  user: User!
+  user_id: String!
+}
+
+type UserQuizProgressCount {
+  answers: Int!
+}
+
+input UserQuizProgressOrderByRelationAggregateInput {
+  _count: SortOrder
+}

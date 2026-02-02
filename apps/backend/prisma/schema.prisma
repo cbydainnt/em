@@ -1,0 +1,928 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator nestgraphql {
+    provider = "prisma-nestjs-graphql"
+    output = "../src/schema"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String @id  @default(auto()) @map("_id") @db.ObjectId
+  type          String?
+  name          String?
+  email         String      @unique
+  phone         String?
+  address       String? 
+  avatar        String?
+  googleId      String?     @unique
+  password      String?
+  deleted       Boolean?    @default(false)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @default(now())
+  deleted_at    DateTime?
+
+  created_by_id   String?   @db.ObjectId
+  created_by      User?     @relation("created_users", fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createds        User[]    @relation("created_users")
+
+  updated_by_id   String?   @db.ObjectId
+  updated_by      User?     @relation("updated_users", fields: [updated_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updateds        User[]    @relation("updated_users")
+
+  deleted_by_id   String?   @db.ObjectId
+  deleted_by      User?     @relation("deleted_users", fields: [deleted_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deleteds        User[]    @relation("deleted_users")
+
+  notifications   Notification[]
+  userNotifications     UserNotification[]
+  user_courses    UserCourse[]
+  comments        Comment[]
+  courseReviews   CourseReview[]
+  orders          Order[]
+  discount_vouchers     DiscountVoucherUsage[]
+  cartItems       CartItem[]
+  user_lesson_progress  UserLessonProgress[] 
+  notes           Note[]
+  reports         Report[]        @relation("UserReports")
+  reportComments  ReportComment[]
+  resolved_reports  Report[]      @relation("ReportResolver")     
+  quiz_progress     UserQuizProgress[]  @relation("UserQuizProgresses")
+  allowed_discount_vouchers DiscountVoucherUser[]
+  course_view     CourseView[]
+
+   // 🔥 Thêm verify email
+  verified        Boolean  @default(false)
+  verifyToken     String?
+  verifyExpires   DateTime?
+
+  // thêm Reset password 
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
+
+  @@map(name: "users")
+}
+
+model Course {
+  course_id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  course_name           String   @unique
+  course_description    String
+  course_price          Int
+  course_original_price Int
+  state                 String   // New, Highest rated, Best Seller, Normal, Sale
+  target                String? 
+  thumbnail             String?    
+  access_duration_months Int? //  Thời hạn truy cập (VD: 6, 12, 24, null = vĩnh viễn)
+  access_type           Int @default(1) // 1: LIMITED, 2: LIFETIME, 3: EXPIRE_AT
+  access_expire_at      DateTime?
+  view_count            Int      @default(0) 
+  created_at            DateTime @default(now())
+  updated_at            DateTime @default(now())
+  created_by            String?  @db.ObjectId
+  updated_by            String?  @db.ObjectId
+  del_flg               Boolean  @default(false)
+
+  user_courses UserCourse[]
+  combos       ComboCourse[] 
+  comments     Comment[] 
+  notifications Notification[]
+  sections     Section[]
+  courseReviews CourseReview[]
+  ratingSummary        RatingSummary?
+  order_items   OrderItem[]
+  cart_items    CartItem[]
+  user_lesson_progress UserLessonProgress[]
+  user_quiz_progress UserQuizProgress[]
+  reports Report[]
+  course_view  CourseView[]
+
+  discount_vouchers DiscountVoucherItem[] @relation("DiscountCourses")
+  quizzes               Quiz[]    @relation("CourseQuizzes")
+  @@map("courses")
+}
+
+model CourseView {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  course_id  String   @db.ObjectId
+  user_id    String?  @db.ObjectId   // null = guest
+  ip_address String?
+  user_agent String?
+
+  created_at DateTime @default(now())
+
+  course     Course  @relation(fields: [course_id], references: [course_id])
+  user       User?   @relation(fields: [user_id], references: [id])
+
+  @@index([course_id])
+  @@index([user_id])
+  @@index([created_at])
+  @@map("course_views")
+}
+
+
+model Section {
+  section_id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  section_title String   @db.String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now())
+  created_by    String?  @db.ObjectId
+  updated_by    String?  @db.ObjectId
+  del_flg       Boolean  @default(false)
+
+  course_id String   @db.ObjectId
+  course    Course   @relation(fields: [course_id], references: [course_id])
+  lessons   Lesson[]
+  @@map("sections")
+}
+
+model Lesson {
+  lesson_id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  lesson_title     String   @db.String
+  lesson_type      Int      @default(0) // 0: video, 2: quiz
+  lesson_video     String?  @db.String
+  lesson_thumbnail String?  @db.String
+  lesson_order     Int      @default(0)
+  minutes          Int      
+  video_duration   Int      @default(0)
+  access_type      Int      @default(3) // 1: free, 2: preview, 3:paid 
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+  created_by       String?  @db.ObjectId
+  updated_by       String?  @db.ObjectId
+  del_flg          Boolean  @default(false)
+
+  section_id String   @db.ObjectId
+  section    Section  @relation(fields: [section_id], references: [section_id], onDelete: Cascade)
+  comments   Comment[]
+  notifications Notification[] 
+  documents  Document[] @relation("LessonDocuments")
+  user_lesson_progress UserLessonProgress[]
+  user_quiz_progress UserQuizProgress[]
+  notes Note[]
+  reports Report[]
+  
+  lesson_quizzes LessonQuiz[] @relation("LessonQuizzes")
+  
+  @@map("lessons")
+}
+
+//vì 1 quiz có thể thuộc nhiều bài, và ngược lại -> bắt buộc sinh bảng mới
+model LessonQuiz {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  lesson_id         String   @db.ObjectId
+  quiz_id           String   @db.ObjectId
+  
+  // Thứ tự hiển thị quiz trong bài học
+  order             Int      @default(0)
+  
+  created_at        DateTime @default(now())
+  
+  lesson            Lesson   @relation("LessonQuizzes", fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+  quiz              Quiz     @relation("QuizLessons", fields: [quiz_id], references: [quiz_id])
+  
+  @@unique([lesson_id, quiz_id])
+  @@index([lesson_id])
+  @@index([quiz_id])
+  @@map("lesson_quizzes")
+}
+
+model Category {
+  category_id String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  created_by  String?
+  updated_by  String?
+  del_flg     Boolean  @default(false)
+  sort_order  Int     @default(0)
+  combos CategoryCombo[]
+
+  @@map("categories")
+}
+
+model Combo {
+  combo_id        String @id @default(auto()) @map("_id") @db.ObjectId
+  combo_name      String @unique
+  combo_type      Int     @default(1)   // 1: NORMAL, 2: HOT
+  original_price  Int
+  price           Int
+  del_flg         Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  created_by      String?
+  updated_by      String?
+
+  categories CategoryCombo[]
+  courses    ComboCourse[]
+  order_items  OrderItem[]
+
+  discount_vouchers DiscountVoucherItem[] @relation("DiscountCombos")
+  @@map("combos")
+}
+
+model Document {
+  document_id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  document_url  String   @db.String
+  extension     String   
+  document_name String   @db.String
+  size          Int      @default(0)
+  isDownloadable Boolean @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now())
+
+  lesson_id     String   @db.ObjectId
+  lesson        Lesson   @relation("LessonDocuments", fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model Note {
+  note_id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String
+  timestamp   Int      // thời điểm trong video (tính bằng giây)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id String @db.ObjectId
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  lesson_id String @db.ObjectId
+  lesson    Lesson @relation(fields: [lesson_id], references: [lesson_id], onDelete: Cascade)
+  del_flg Boolean @default(false)
+  background_color String?
+  @@map("notes")
+}
+
+model Notification {
+  notification_id String   @id @default(auto()) @map("_id") @db.ObjectId 
+  user_id         String? 
+  user_type       String? 
+  title           String  
+  message         String   
+  type            Int      // 1:SYSTEM, 2:REMINDER, 3:FEEDBACK, 4:USER_ACTION, 5:ADMIN_ACTION, 6:PROMOTION, 7:NEW_CONTENT, 8:COURSE_COMPLETE, 9:SOCIAL 
+  context         String?  
+  action_url      String?  
+  status          Int      @default(1)   // 1:UNREAD, 2:READ, 3:DISMISSED
+
+  course_id       String?  @db.ObjectId  // ID khóa học liên quan (nếu có)
+  lesson_id       String?  @db.ObjectId  // ID bài học liên quan (nếu có)
+
+
+  created_at      DateTime @default(now()) 
+  updated_at      DateTime? @updatedAt 
+  del_flg         Boolean  @default(false)
+
+  user            User?    @relation(fields: [user_id], references: [id])
+  course          Course?  @relation(fields: [course_id], references: [course_id])
+  lesson          Lesson?  @relation(fields: [lesson_id], references: [lesson_id])
+  userNotifications UserNotification[]
+
+  @@map("notifications") 
+  @@index([course_id]) // Index để query nhanh hơn
+  @@index([user_id, course_id])
+  @@index([user_type])
+}
+
+model UserNotification {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id         String   @db.ObjectId
+  notification_id String   @db.ObjectId
+  status          Int      @default(1) // 1:UNREAD, 2:READ, 3:DISMISSED
+  read_at         DateTime?
+  
+  user            User         @relation(fields: [user_id], references: [id])
+  notification    Notification @relation(fields: [notification_id], references: [notification_id])
+
+  @@unique([user_id, notification_id])
+  @@map("user_notifications")
+  @@index([user_id, status])
+  @@index([notification_id])
+}
+
+model ActiveCode {
+  active_code_id String @id @default(auto()) @map("_id") @db.ObjectId
+  order_item_id  String @db.ObjectId
+  course_id      String @db.ObjectId
+  customer_id    String @db.ObjectId // người sở hữu voucher
+  combo_id       String? @db.ObjectId  
+  item_type      Int     @default(2)   // 1: Combo, 2: Course
+  //receiver_id    String @db.ObjectId // người sử dụng voucher, chức năng tặng mã khóa học cho user khác
+  code           String
+  status         Int //  @default(1) // 1: unused, 2: used, 3: expired
+  created_at     DateTime @default(now())
+  used_at        DateTime?
+  expires_at     DateTime?       //  Ngày hết hạn
+  @@map("active_codes")
+}
+
+model DiscountVoucher {
+  discount_voucher_id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  code             String    @unique                     // Mã giảm giá, ví dụ: ENGLISHMASTER50
+
+  discount_type    Int        @default(1)                 // 1: percent, 2: fixed_amount
+  discount_value   Int                                    // 10 (%) hoặc 50000 (VNĐ)
+  min_order_amount Int?                                   // Đơn tối thiểu để áp dụng
+
+  applicable_type  Int        @default(1)                 // 1: all orders, 2: specific course, 3: combo  
+
+  applicable_items     DiscountVoucherItem[]  
+  user_scope          Int    @default(1)                    // 1: ALL_USERS 2: SPECIFIC_USERS
+  applicable_users    DiscountVoucherUser[]
+
+  start_date       DateTime   @default(now())
+  end_date         DateTime?                              // Ngày hết hạn
+
+  usage_limit      Int?                                   // Tổng số lần có thể sử dụng trên toàn hệ thống
+  used_count       Int        @default(0)                 // Số lần đã dùng trên toàn hệ thống
+  per_user_limit   Int?       @default(1)                 // Mỗi user được dùng mấy lần
+
+  status           Int        @default(1)                 // 1: active, 2: inactive, 3: expired
+  created_at       DateTime   @default(now())
+  updated_at       DateTime?  @updatedAt
+
+  used_by          DiscountVoucherUsage[]                 // Quan hệ tới bảng tracking ai dùng
+  order            Order[]
+  @@map("discount_vouchers")
+}
+
+model DiscountVoucherItem {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  discount_voucher_id  String   @db.ObjectId
+  
+  // Một trong 2 trường này sẽ có giá trị, trường còn lại null
+  course_id            String?  @db.ObjectId
+  combo_id             String?  @db.ObjectId
+
+  // Quan hệ
+  voucher              DiscountVoucher @relation(fields: [discount_voucher_id], references: [discount_voucher_id])
+  course               Course?         @relation("DiscountCourses", fields: [course_id], references: [course_id])
+  combo                Combo?          @relation("DiscountCombos", fields: [combo_id], references: [combo_id])
+
+  // Đảm bảo không trùng + chỉ 1 trong 2 trường được fill
+  @@unique([discount_voucher_id, course_id])
+  @@unique([discount_voucher_id, combo_id])
+  @@map("discount_voucher_items")
+}
+model DiscountVoucherUser {
+  id                  String @id @default(auto()) @map("_id") @db.ObjectId
+  discount_voucher_id String @db.ObjectId
+  user_id             String @db.ObjectId
+
+  voucher DiscountVoucher @relation(fields: [discount_voucher_id], references: [discount_voucher_id])
+  user    User            @relation(fields: [user_id], references: [id])
+
+  @@unique([discount_voucher_id, user_id])
+  @@index([user_id])
+  @@map("discount_voucher_users")
+}
+
+
+model Order {
+  order_id       String      @id @default(auto()) @map("_id") @db.ObjectId
+  user_id        String      @db.ObjectId
+  total_price    Int        
+  status         Int         @default(1) // pending_payment | paid | cancelled | failed
+  payment_method Int?        @default(1) // 1: VNPay, 2: Momo, 3: QR code
+  created_at     DateTime    @default(now())
+  updated_at     DateTime?   @updatedAt
+  order_items    OrderItem[] 
+
+  user           User        @relation(fields: [user_id], references: [id])
+  discount_voucher_id String? @db.ObjectId
+  discount_voucher    DiscountVoucher? @relation(fields: [discount_voucher_id], references: [discount_voucher_id])
+  discount_vouchers DiscountVoucherUsage[]
+  @@map("orders")
+}
+
+model OrderItem {
+  order_item_id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  order_id        String   @db.ObjectId
+  item_type       Int      @default(1) // 1: Combo, 2: Course
+  combo_id        String?  @db.ObjectId
+  course_id       String?  @db.ObjectId
+  final_price     Int
+  created_at      DateTime @default(now())
+  updated_at      DateTime? @updatedAt
+  del_flg         Boolean  @default(false)
+  order           Order    @relation(fields: [order_id], references: [order_id])
+  combo           Combo?   @relation(fields: [combo_id], references: [combo_id])
+  course          Course?  @relation(fields: [course_id], references: [course_id])
+
+  @@map("order_items")
+}
+
+model CartItem {
+  cart_item_id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id   String   @db.ObjectId
+  course_id String   @db.ObjectId
+  added_at  DateTime @default(now())
+  selected     Boolean  @default(false)
+
+  user      User     @relation(fields: [user_id], references: [id])
+  course    Course   @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, course_id])
+  @@map("cart_items")
+}
+
+model DiscountVoucherUsage {
+  voucher_usage_id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  discount_voucher_id          String           @db.ObjectId
+  user_id             String           @db.ObjectId
+  order_id            String?          @db.ObjectId
+  used_at             DateTime         @default(now())
+
+  voucher             DiscountVoucher  @relation(fields: [discount_voucher_id], references: [discount_voucher_id])
+  user                User             @relation(fields: [user_id], references: [id])
+  order               Order?           @relation(fields: [order_id], references: [order_id])
+
+  @@unique([discount_voucher_id, user_id])      
+  @@map("discount_voucher_usages")
+}
+
+model CourseReview {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  course_id   String   @db.ObjectId
+  user_id     String   @db.ObjectId
+
+  rating      Int      @default(5) // 1–5 sao
+  comment     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+
+  course      Course   @relation(fields: [course_id], references: [course_id])
+  user        User     @relation(fields: [user_id], references: [id])
+
+  @@unique([course_id, user_id]) 
+  @@map("course_reviews")
+}
+
+model RatingSummary {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  course_id       String   @unique @db.ObjectId
+  avg_rating      Float    @default(0)
+  total_reviews   Int      @default(0)
+  rating_1_count  Int      @default(0)
+  rating_2_count  Int      @default(0)
+  rating_3_count  Int      @default(0)
+  rating_4_count  Int      @default(0)
+  rating_5_count  Int      @default(0)
+  updated_at      DateTime @default(now())
+
+  course          Course   @relation(fields: [course_id], references: [course_id])
+
+  @@map("rating_summaries")
+}
+
+model CategoryCombo {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  category_id String   @db.ObjectId
+  combo_id    String   @db.ObjectId
+
+  category Category @relation(fields: [category_id], references: [category_id])
+  combo    Combo    @relation(fields: [combo_id], references: [combo_id])
+
+  @@unique([category_id, combo_id])
+  @@map("category_combos")
+}
+
+model ComboCourse {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  combo_id  String   @db.ObjectId
+  course_id String   @db.ObjectId
+  del_flg   Boolean  @default(false)
+
+  combo  Combo  @relation(fields: [combo_id], references: [combo_id])
+  course Course @relation(fields: [course_id], references: [course_id]) 
+
+  @@unique([combo_id, course_id])
+  @@map("combo_courses")
+}
+
+model UserCourse {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id   String   @db.ObjectId
+  course_id String   @db.ObjectId
+
+  enrolled_at    DateTime? @default(now())  
+  last_accessed  DateTime?   
+  status         Int         @default(1) // 1: ACTIVE, 2: COMPLETED, 3: RESERVED
+  expired_date   DateTime?   // Ngày hết hạn khóa học, tính từ thời điểm enrolled_at (enrolled_at + 6 months)
+
+  paused_at          DateTime?  // thời điểm bắt đầu bảo lưu hiện tại
+  pause_until        DateTime?  // thời điểm kết thúc bảo lưu hiện tại
+  total_paused_days  Int        @default(0) // tổng số ngày đã bảo lưu, tối đa 60 ngày
+  pause_count        Int        @default(0) // số lần đã bảo lưu, tối đa 3 lần
+  
+  created_at DateTime @default(now())
+  del_flg    Boolean  @default(false)
+  user   User   @relation(fields: [user_id], references: [id])
+  course Course @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, course_id])
+  @@map("user_courses")
+}
+
+model UserLessonProgress {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id       String   @db.ObjectId
+  course_id     String   @db.ObjectId
+  lesson_id     String   @db.ObjectId
+
+  watched_seconds Int    @default(0)
+  completed       Int    @default(1) // 1:INCOMPLETE, 2:COMPLETE
+  last_accessed   DateTime?
+  segments        Json?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  user    User    @relation(fields: [user_id], references: [id])
+  lesson  Lesson  @relation(fields: [lesson_id], references: [lesson_id])
+  course  Course  @relation(fields: [course_id], references: [course_id])
+
+  @@unique([user_id, lesson_id])
+  @@map("user_lesson_progress")
+}
+
+model MSystem {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  param_key      String  
+  param_no       String
+  param_name     String
+  param_value    String
+  sort           Int?      @default(0)
+  category       String?
+  created_by     String?
+  updated_by     String?
+  create_at      DateTime? @default(now())
+  updated_at     DateTime? @default(now())
+  del_flg        Int?      @default(0)
+
+  @@unique([param_key, param_no])
+  @@map("m_system")
+}
+
+model Comment {
+  comment_id   String    @id @default(auto()) @map("_id") @db.ObjectId
+  parent_id    String?   @db.ObjectId
+  content      String
+  image_url    String?   @db.String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  created_by   String?   @db.ObjectId
+  updated_by   String?   @db.ObjectId
+  del_flg      Boolean   @default(false)
+  is_hidden    Boolean   @default(false)
+  seed_tag     String?   @unique   //field này dc tạo để dành cho seed, ko ảnh hưởng tới comment trên database 
+  // Quan hệ tới Course (1 Course có nhiều Comment)
+  course_id    String?   @db.ObjectId
+  course       Course?   @relation(fields: [course_id], references: [course_id])
+
+  // Quan hệ tới Lesson (1 lesson có nhiều comment)
+  lesson_id    String?   @db.ObjectId
+  lesson       Lesson?   @relation(fields: [lesson_id], references: [lesson_id])
+
+  user_id      String?   @db.ObjectId
+  user   User?   @relation(fields: [user_id], references: [id])
+  // Quan hệ đệ quy (cây bình luận)
+  parent   Comment?  @relation("CommentHierarchy", fields: [parent_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
+  replies  Comment[] @relation("CommentHierarchy")
+
+  @@map("comments")
+}
+
+
+// Model Report 
+model Report {
+  report_id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id        String?  @db.ObjectId
+  course_id      String?  @db.ObjectId
+  lesson_id      String?  @db.ObjectId
+  
+  // Loại báo cáo 
+  report_type    Int      @default(1) // 1: Video, 2: Bài học, 3: Kỹ thuật, 4: Khác
+  category       Int      @default(1) // Chi tiết loại
+  
+  // Thông tin báo cáo
+  title          String   @db.String
+  description    String   @db.String
+  screenshot_urls String[] // Mảng URLs ảnh chụp màn hình
+  
+  // Trạng thái
+  status         Int      @default(1) // 1: Pending, 2: In Review, 3: Resolved, 4: Rejected
+  priority       Int      @default(2) // 1: Low, 2: Medium, 3: High, 4: Critical
+  
+  // Metadata
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
+  resolved_at    DateTime?
+  resolved_by    String?  @db.ObjectId
+  resolution_notes String?
+  
+  // Đánh dấu
+  is_anonymous   Boolean  @default(false)
+  allow_contact  Boolean  @default(true)
+  del_flg         Boolean  @default(false)
+  
+  // Relations
+  user          User?    @relation(fields: [user_id], references: [id], name: "UserReports")
+  course        Course?  @relation(fields: [course_id], references: [course_id])
+  lesson        Lesson?  @relation(fields: [lesson_id], references: [lesson_id])
+  resolver      User?    @relation(fields: [resolved_by], references: [id], name: "ReportResolver")
+  comments      ReportComment[]
+  
+  @@map("reports")
+  @@index([user_id])
+  @@index([course_id])
+  @@index([lesson_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+// Model Report Comment 
+model ReportComment {
+  comment_id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  report_id    String   @db.ObjectId
+  user_id      String?  @db.ObjectId
+  content      String   @db.String
+  created_at   DateTime @default(now())
+  
+  report       Report   @relation(fields: [report_id], references: [report_id])
+  user         User?    @relation(fields: [user_id], references: [id])
+  
+  @@map("report_comments")
+  @@index([report_id])
+}
+
+model SystemBannerConfig {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  //text
+  title_segments Json?
+  description_config Json? 
+
+  //background color
+  background_css String
+
+  //image source
+  main_image_src String?
+  main_floating_image_config Json? 
+  main_floating_image_src String?
+  title_decor_image_src String?
+  button_decor_image_src String?
+
+  //button CTA 
+  show_action_button Boolean @default(true)
+  action_button_text String?
+  action_button_link String?
+
+  //is default or not
+  is_default Boolean @default(false)
+  is_active  Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  updated_by String?
+
+  @@map("system_banner_configs")
+}
+
+
+model Quiz {
+  quiz_id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  title              String
+  
+  quiz_type          Int          @default(1)  // 1: lesson quiz, 2: course test, 3: final exam
+  question_count     Int          @default(0)
+  total_questions    Int          @default(0)
+  total_points       Int          @default(0)
+  passing_score      Int          @default(70) //percentage
+  duration_minutes   Int?         
+  difficulty_level   Int          @default(1)  // 1-5
+  
+  version            Int          @default(1)    
+  parent_quiz_id     String?      @db.ObjectId   
+  is_latest_version  Boolean      @default(true)  
+  version_notes      String?                         
+
+  has_audio          Boolean      @default(false)
+  show_explanation   Boolean      @default(true)
+  randomize_questions Boolean     @default(false)
+  randomize_answers  Boolean      @default(false)
+  allow_review       Boolean      @default(true)
+  max_attempts       Int?
+  allow_retake       Boolean      @default(true)
+  show_results       Boolean      @default(true)
+  
+  status             Int          @default(1)  // 1: active, 2: draft, 3: archived
+  
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+  del_flg            Boolean      @default(false)
+  
+  // Relations
+  lesson_id          String?      @db.ObjectId
+  course_id          String?      @db.ObjectId
+  
+  course             Course?      @relation("CourseQuizzes", fields: [course_id], references: [course_id])
+  
+  questions          Question[]   @relation("QuizQuestions")
+  audios             QuizAudio[]  @relation("QuizAudios")
+  user_progress      UserQuizProgress[] @relation("QuizProgress")
+
+  parent_quiz        Quiz?        @relation("QuizVersions", fields: [parent_quiz_id], references: [quiz_id], onDelete: NoAction, onUpdate: NoAction)
+  quiz_versions      Quiz[]       @relation("QuizVersions")
+  quiz_lessons       LessonQuiz[] @relation("QuizLessons")
+  
+  @@index([quiz_type])
+  @@index([difficulty_level]) 
+  @@index([status])
+  @@index([lesson_id])
+  @@index([course_id])
+  @@index([created_at])
+  @@index([parent_quiz_id])        
+  @@index([is_latest_version])      
+  @@index([version])   
+  @@map("quizzes")
+}
+
+model Question {
+  question_id      String               @id @default(auto()) @map("_id") @db.ObjectId
+  quiz_id          String?               @db.ObjectId
+  
+  question_text    String
+  question_image   String?
+  question_type    Int                  @default(1)
+  // 1: Single Choice MCQ
+  // 2: Multiple Choice MCQ  
+  // 3: Fill in the Blank
+  // 4: True/False
+  // 5: Matching
+  // 6: Rearrangement
+  // 7: Essay
+  
+  order            Int                  @default(0)
+  points           Int                  @default(1)
+  difficulty    Int @default(1)
+  explanation      String?
+  
+  // Audio related
+  audio_id         String?              @db.ObjectId
+  audio_order      Int? 
+
+  reading_passage_id String? @db.ObjectId
+  del_flg          Boolean              @default(false)
+
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+  
+  quiz             Quiz?                 @relation("QuizQuestions", fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+  audio            QuizAudio?           @relation("AudioQuestions", fields: [audio_id], references: [audio_id])
+  answers          Answer[]             @relation("QuestionAnswers")
+  user_answers     UserQuizAnswer[]     @relation("QuestionUserAnswers")
+  reading_passage  ReadingPassage?      @relation("PassageQuestions", fields: [reading_passage_id], references: [reading_passage_id])
+  @@index([quiz_id])
+  @@index([audio_id])
+  @@index([question_type])
+  @@index([difficulty])
+  @@map("questions")
+}
+
+model Answer {
+  answer_id       String        @id @default(auto()) @map("_id") @db.ObjectId
+  question_id     String        @db.ObjectId
+  
+  answer_text     String
+  answer_image    String?       // For image-based answers
+  is_correct      Boolean       @default(false)
+  order           Int           @default(0)
+  match_key       String?
+  blank_position  Int?
+  
+  question        Question      @relation("QuestionAnswers", fields: [question_id], references: [question_id], onDelete: Cascade)
+  
+  @@index([question_id])
+  @@index([is_correct])
+  @@map("answers")
+}
+
+model ReadingPassage {
+  reading_passage_id             String @id @default(auto()) @map("_id") @db.ObjectId
+
+  title      String?
+  content    String
+  difficulty Int @default(1)
+  tags       String[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String?
+  updated_by String?
+
+  total_questions Int   
+  question_ordering Json? // [questionId1, questionId2, ...]
+
+  questions Question[] @relation("PassageQuestions")
+
+  @@index([difficulty])
+  @@index([tags])
+  @@map("reading_passages")
+}
+
+model QuizAudio {
+  audio_id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  quiz_id          String       @db.ObjectId
+  title            String?
+  audio_url        String
+  file_name        String
+  duration_seconds Int
+  transcript       String?
+  total_questions Int
+  created_at       DateTime     @default(now())
+  
+  question_ordering Json? // [questionId1, questionId2, ...]
+
+  quiz             Quiz         @relation("QuizAudios", fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+  questions        Question[] @relation("AudioQuestions")
+  @@index([quiz_id])
+  @@map("quiz_audios")
+}
+
+model UserQuizProgress {
+  progress_id      String             @id @default(auto()) @map("_id") @db.ObjectId
+  user_id          String             @db.ObjectId
+  quiz_id          String             @db.ObjectId
+  lesson_id        String?            @db.ObjectId   
+  course_id        String?            @db.ObjectId  
+
+  
+  // Progress
+  score            Float?             // Actual score
+  percentage       Float?             // Score percentage
+  total_questions  Int                @default(0)
+  correct_answers  Int                @default(0)
+  
+  // Status
+  status           Int                @default(1) // 1: in_progress, 2: completed, 3: abandoned
+  passed           Boolean            @default(false)
+  
+  // Time tracking
+  time_spent       Int?               // Total seconds spent
+  started_at       DateTime           @default(now())
+  completed_at     DateTime?
+  
+  // Attempts
+  attempts         Int                @default(1)
+  
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  
+  user             User               @relation("UserQuizProgresses", fields: [user_id], references: [id])
+  quiz             Quiz               @relation("QuizProgress", fields: [quiz_id], references: [quiz_id])
+  answers          UserQuizAnswer[]   @relation("ProgressAnswers")
+  lesson           Lesson?            @relation(fields: [lesson_id], references: [lesson_id])
+  course           Course?            @relation(fields: [course_id], references: [course_id])
+  
+  @@unique([user_id, quiz_id,lesson_id, attempts])
+
+  @@index([user_id])
+  @@index([quiz_id])
+  @@map("user_quiz_progress")
+}
+
+model UserQuizAnswer {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  progress_id      String             @db.ObjectId
+  question_id      String             @db.ObjectId
+  
+  // For MCQ
+  selected_answer_ids String[]        @db.ObjectId
+  
+  answer_text      String?            // For text-based questions (fill blank, rewrite)
+  
+  // Evaluation
+  is_correct       Boolean            @default(false)
+  points_earned    Float              @default(0)
+  
+  // Time tracking
+  time_spent       Int?               // Seconds spent on this question
+  
+  created_at       DateTime           @default(now())
+  
+  progress         UserQuizProgress   @relation("ProgressAnswers", fields: [progress_id], references: [progress_id], onDelete: Cascade)
+  question         Question           @relation("QuestionUserAnswers", fields: [question_id], references: [question_id])
+  
+  @@unique([progress_id, question_id])
+  @@map("user_quiz_answers")
+}

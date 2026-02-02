@@ -1,0 +1,18 @@
+import { Field } from '@nestjs/graphql';
+import { InputType } from '@nestjs/graphql';
+import { Prisma } from '@prisma/client';
+import { OrderItemWhereUniqueInput } from './order-item-where-unique.input';
+import { Type } from 'class-transformer';
+import { OrderItemCreateWithoutComboInput } from './order-item-create-without-combo.input';
+
+@InputType()
+export class OrderItemCreateOrConnectWithoutComboInput {
+
+    @Field(() => OrderItemWhereUniqueInput, {nullable:false})
+    @Type(() => OrderItemWhereUniqueInput)
+    where!: Prisma.AtLeast<OrderItemWhereUniqueInput, 'order_item_id'>;
+
+    @Field(() => OrderItemCreateWithoutComboInput, {nullable:false})
+    @Type(() => OrderItemCreateWithoutComboInput)
+    create!: OrderItemCreateWithoutComboInput;
+}

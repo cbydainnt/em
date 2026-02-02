@@ -1,0 +1,57 @@
+import { Field } from '@nestjs/graphql';
+import { InputType } from '@nestjs/graphql';
+import { StringFieldUpdateOperationsInput } from '../prisma/string-field-update-operations.input';
+import { NullableStringFieldUpdateOperationsInput } from '../prisma/nullable-string-field-update-operations.input';
+import { DateTimeFieldUpdateOperationsInput } from '../prisma/date-time-field-update-operations.input';
+import { BoolFieldUpdateOperationsInput } from '../prisma/bool-field-update-operations.input';
+import { CourseUpdateOneWithoutCommentsNestedInput } from '../course/course-update-one-without-comments-nested.input';
+import { LessonUpdateOneWithoutCommentsNestedInput } from '../lesson/lesson-update-one-without-comments-nested.input';
+import { UserUpdateOneWithoutCommentsNestedInput } from '../user/user-update-one-without-comments-nested.input';
+import { CommentUpdateOneWithoutRepliesNestedInput } from './comment-update-one-without-replies-nested.input';
+import { CommentUpdateManyWithoutParentNestedInput } from './comment-update-many-without-parent-nested.input';
+
+@InputType()
+export class CommentUpdateInput {
+
+    @Field(() => StringFieldUpdateOperationsInput, {nullable:true})
+    content?: StringFieldUpdateOperationsInput;
+
+    @Field(() => NullableStringFieldUpdateOperationsInput, {nullable:true})
+    image_url?: NullableStringFieldUpdateOperationsInput;
+
+    @Field(() => DateTimeFieldUpdateOperationsInput, {nullable:true})
+    created_at?: DateTimeFieldUpdateOperationsInput;
+
+    @Field(() => DateTimeFieldUpdateOperationsInput, {nullable:true})
+    updated_at?: DateTimeFieldUpdateOperationsInput;
+
+    @Field(() => NullableStringFieldUpdateOperationsInput, {nullable:true})
+    created_by?: NullableStringFieldUpdateOperationsInput;
+
+    @Field(() => NullableStringFieldUpdateOperationsInput, {nullable:true})
+    updated_by?: NullableStringFieldUpdateOperationsInput;
+
+    @Field(() => BoolFieldUpdateOperationsInput, {nullable:true})
+    del_flg?: BoolFieldUpdateOperationsInput;
+
+    @Field(() => BoolFieldUpdateOperationsInput, {nullable:true})
+    is_hidden?: BoolFieldUpdateOperationsInput;
+
+    @Field(() => NullableStringFieldUpdateOperationsInput, {nullable:true})
+    seed_tag?: NullableStringFieldUpdateOperationsInput;
+
+    @Field(() => CourseUpdateOneWithoutCommentsNestedInput, {nullable:true})
+    course?: CourseUpdateOneWithoutCommentsNestedInput;
+
+    @Field(() => LessonUpdateOneWithoutCommentsNestedInput, {nullable:true})
+    lesson?: LessonUpdateOneWithoutCommentsNestedInput;
+
+    @Field(() => UserUpdateOneWithoutCommentsNestedInput, {nullable:true})
+    user?: UserUpdateOneWithoutCommentsNestedInput;
+
+    @Field(() => CommentUpdateOneWithoutRepliesNestedInput, {nullable:true})
+    parent?: CommentUpdateOneWithoutRepliesNestedInput;
+
+    @Field(() => CommentUpdateManyWithoutParentNestedInput, {nullable:true})
+    replies?: CommentUpdateManyWithoutParentNestedInput;
+}

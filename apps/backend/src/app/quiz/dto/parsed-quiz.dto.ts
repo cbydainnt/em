@@ -1,0 +1,3 @@
+interface ParsedQuiz {
+  questions: ParsedQuestion[];
+}

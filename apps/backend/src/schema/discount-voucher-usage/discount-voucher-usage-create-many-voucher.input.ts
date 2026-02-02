@@ -1,0 +1,18 @@
+import { Field } from '@nestjs/graphql';
+import { InputType } from '@nestjs/graphql';
+
+@InputType()
+export class DiscountVoucherUsageCreateManyVoucherInput {
+
+    @Field(() => String, {nullable:true})
+    voucher_usage_id?: string;
+
+    @Field(() => String, {nullable:false})
+    user_id!: string;
+
+    @Field(() => String, {nullable:true})
+    order_id?: string;
+
+    @Field(() => Date, {nullable:true})
+    used_at?: Date | string;
+}
