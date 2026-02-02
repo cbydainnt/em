@@ -689,7 +689,7 @@ export default function LessonDetail({ lessonId }: LessonDetailProps) {
         <Grid item xs={12} md={right}>
           {/* Làm quiz */}
           {quizMode === 'taking' && activeQuiz && (
-            <Box sx={{ height: { xs: 'auto', md: 'calc(100vh - 180px)' }, position: 'sticky', top: 16 }}>
+            <Box sx={{ height: { xs: 'auto', md: 'calc(100vh - 180px)' }, position: 'sticky', top: 0 }}>
               <LessonQuizTaker
                 quizId={activeQuiz.quiz_id}
                 onClose={() => {

@@ -30,6 +30,23 @@ export default function QuizFullPage() {
     resultData?: any;
   } | null>(null);
 
+  // ẨN HEADER CHÍNH CỦA TRANG KHI VÀO QUIZ FULL PAGE
+  useEffect(() => {
+    // Tìm và ẩn header
+    const header = document.querySelector('header') || document.querySelector('nav') || document.querySelector('.main-header') || document.querySelector('[role="banner"]') || document.querySelector('.MuiAppBar-root'); // Material UI AppBar
+
+    if (header) {
+      (header as HTMLElement).style.display = 'none';
+    }
+
+    // Cleanup: Hiện lại header khi unmount (thoát khỏi quiz)
+    return () => {
+      if (header) {
+        (header as HTMLElement).style.display = '';
+      }
+    };
+  }, []);
+
   // Lấy thông tin lesson từ state (khi navigate từ LessonDetail)
   useEffect(() => {
     if (location.state) {
@@ -136,13 +153,6 @@ export default function QuizFullPage() {
   return (
     <DefaultLayout>
       <Container disableGutters maxWidth={false} sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header với thông tin điều hướng */}
-        {/* <Box sx={{ p: 0, zIndex: 1000, flexShrink: 0 }}>
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 1, bgcolor: '#b26edaff', color: 'white' }}>
-            Quay lại
-          </Button>
-        </Box> */}
-
         {/* Nội dung chính */}
         <Box
           sx={{

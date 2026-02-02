@@ -278,6 +278,11 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
       }
       return newAnswers;
     });
+
+    // Đánh dấu có thay đổi chưa lưu
+    if (enableSaveProgress) {
+      // setHasUnsavedChanges(true);
+    }
   };
 
   const handleSubmit = async () => {
@@ -456,7 +461,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
       >
         <Paper
           sx={{
-            p: isFullscreenMode ? 2 : isCompactMode ? 1 : 2,
+            p: 2,
             borderRadius: 2,
             borderLeft: isFlagged ? '4px solid #ff4444' : '4px solid #667eea',
             position: 'relative',
@@ -540,7 +545,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
             </Box>
           </Box>
 
-          {/* Nội dung câu hỏi - Font size vừa đủ đọc trong compact mode */}
+          {/* Nội dung câu hỏi */}
           <Typography
             variant="body1"
             sx={{
@@ -554,7 +559,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
             {question.question_text}
           </Typography>
 
-          {/* Đáp án - Giữ padding đủ để dễ chọn */}
+          {/* Đáp án */}
           {question.question_type === 2 ? (
             <FormGroup>
               {question.answers.map((answer, idx) => (
@@ -562,11 +567,12 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                   key={answer.answer_id}
                   control={<Checkbox sx={{ ml: isFullscreenMode ? 4 : 0 }} checked={userAnswers[question.question_id]?.includes(answer.answer_id) || false} onChange={() => handleAnswerChange(question.question_id, answer.answer_id, true)} size="small" disabled={isTimeUp} />}
                   label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
                       <Typography
                         sx={{
                           fontWeight: 600,
                           mr: 0.5,
+
                           color: 'primary.main',
                           minWidth: 20,
                           fontSize: isFullscreenMode ? '0.95rem' : isCompactMode ? '0.85rem' : '0.9rem',
@@ -584,8 +590,8 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                     </Box>
                   }
                   sx={{
-                    p: isCompactMode ? 0.75 : 1,
-                    mb: isCompactMode ? 0.5 : 1,
+                    p: isCompactMode ? 1.25 : 1,
+                    mb: isCompactMode ? 0.75 : 1,
                     border: '1px solid',
                     borderColor: userAnswers[question.question_id]?.includes(answer.answer_id) ? 'primary.main' : '#e0e0e0',
                     borderRadius: 1,
@@ -629,8 +635,8 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                     </Box>
                   }
                   sx={{
-                    p: isCompactMode ? 0.75 : 1,
-                    mb: isCompactMode ? 0.5 : 1,
+                    p: isCompactMode ? 1.25 : 1,
+                    mb: isCompactMode ? 0.75 : 1,
                     border: '1px solid',
                     borderColor: userAnswers[question.question_id]?.[0] === answer.answer_id ? 'primary.main' : '#e0e0e0',
                     borderRadius: 1,
@@ -650,7 +656,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
     );
   };
 
-  // Render navigation cho questionsPerPage = 1 (bình thường) - nhỏ gọn hơn
+  // Render navigation cho questionsPerPage = 1 (bình thường)
   const renderSinglePageNavigation = () => {
     if (questionsPerPage !== 1 || !quiz) return null;
 
@@ -725,8 +731,289 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
       </Box>
     );
   };
+  const renderSinglePageNavigationFullscreen = () => {
+    if (questionsPerPage !== 1 || !quiz) return null;
 
-  // Render dialogs (giữ nguyên)
+    return (
+      <Box sx={{ mt: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-start',
+            mx: 2,
+          }}
+        >
+          {quiz.questions.map((q, idx) => {
+            const isAnswered = !!userAnswers[q.question_id];
+            const isFlagged = flaggedQuestions.includes(q.question_id);
+
+            return (
+              <Tooltip key={q.question_id} title={`Câu ${idx + 1}`}>
+                <Box
+                  onClick={() => !isTimeUp && scrollToQuestion(q.question_id)}
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    border: '2px solid',
+                    borderColor: isFlagged ? '#ff4444' : isAnswered ? '#4CAF50' : 'rgba(255,255,255,0.5)',
+                    bgcolor: isAnswered ? '#4CAF50' : isFlagged ? 'rgba(244, 67, 54, 0.3)' : 'transparent',
+                    color: 'white',
+                    fontSize: '0.8rem',
+                    fontWeight: isFlagged ? 'bold' : 'normal',
+                    cursor: isTimeUp ? 'default' : 'pointer',
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                    opacity: isTimeUp ? 0.6 : 1,
+                    '&:hover': {
+                      bgcolor: isTimeUp ? '' : isAnswered ? '#45a049' : isFlagged ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255,255,255,0.3)',
+                    },
+                  }}
+                >
+                  {idx + 1}
+                  {isFlagged && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -3,
+                        right: -3,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: '#ff4444',
+                        border: '1px solid white',
+                      }}
+                    />
+                  )}
+                </Box>
+              </Tooltip>
+            );
+          })}
+        </Box>
+      </Box>
+    );
+  };
+
+  // Render navigation cho questionsPerPage > 1
+  const renderMultiPageNavigationNormal = () => {
+    if (questionsPerPage <= 1 || !quiz) return null;
+    if (isTimeUp) return null;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 1,
+          ml: 1,
+        }}
+      >
+        <Button variant="contained" size="small" disabled={currentPage <= 1} onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)} sx={{ minWidth: 60, textTransform: 'none' }}>
+          Trước
+        </Button>
+
+        <Button variant="contained" size="small" disabled={currentPage >= totalPages} onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)} sx={{ minWidth: 60, textTransform: 'none' }}>
+          Sau
+        </Button>
+      </Box>
+    );
+  };
+
+  const renderMultiPageNavigationFullscreen = () => {
+    if (questionsPerPage <= 1 || !quiz) return null;
+
+    return (
+      <Box sx={{ mt: 1 }}>
+        {/* Hàng trên: Các nhóm trang và danh sách câu hỏi */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          {/* Bên trái: Các nhóm trang */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.5,
+              flexWrap: 'wrap',
+              flex: 1,
+            }}
+          >
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              const pageStart = (page - 1) * questionsPerPage + 1;
+              const pageEnd = Math.min(page * questionsPerPage, quiz.questions.length);
+              const isCurrent = page === currentPage;
+
+              const hasAnswered = quiz.questions.slice(pageStart - 1, pageEnd).some((q) => !!userAnswers[q.question_id]);
+              const hasFlagged = quiz.questions.slice(pageStart - 1, pageEnd).some((q) => flaggedQuestions.includes(q.question_id));
+
+              return (
+                <Tooltip key={page} title={`Câu ${pageStart}-${pageEnd}`}>
+                  <Box
+                    onClick={() => !isTimeUp && setCurrentPage(page)}
+                    sx={{
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.85rem',
+                      fontWeight: isCurrent ? 600 : 400,
+                      bgcolor: isCurrent ? 'rgba(255,255,255,0.3)' : hasFlagged ? 'rgba(244, 67, 54, 0.2)' : hasAnswered ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
+                      color: 'white',
+                      cursor: isTimeUp ? 'default' : 'pointer',
+                      transition: 'all 0.2s',
+                      border: '1px solid',
+                      borderColor: isCurrent ? 'white' : hasFlagged ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255,255,255,0.3)',
+                      opacity: isTimeUp ? 0.6 : 1,
+                      '&:hover': {
+                        bgcolor: isTimeUp ? '' : 'rgba(255,255,255,0.2)',
+                      },
+                      position: 'relative',
+                    }}
+                  >
+                    {pageStart}-{pageEnd}
+                    {hasFlagged && !isCurrent && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -3,
+                          right: -3,
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          bgcolor: '#ff4444',
+                          border: '1px solid white',
+                        }}
+                      />
+                    )}
+                  </Box>
+                </Tooltip>
+              );
+            })}
+
+            {/* Các nút điều hướng - ẩn khi hết giờ */}
+            {!isTimeUp && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
+                <Tooltip title="Quay lại">
+                  <IconButton
+                    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    sx={{
+                      title: 'Quay lại',
+                      color: 'white',
+                      width: 90,
+                      height: 30,
+                      borderRadius: 5,
+                      border: 1,
+                      p: 1,
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.3)',
+                      },
+                    }}
+                  >
+                    <IconArrowLeft size={14} />
+                    <Typography sx={{ fontSize: '0.85rem', ml: 0.5, alignItems: 'center' }}>Quay lại</Typography>
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Tiếp tục">
+                  <IconButton
+                    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    sx={{
+                      color: 'white',
+                      width: 90,
+                      height: 30,
+                      borderRadius: 5,
+                      border: 1,
+                      p: 1,
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.3)',
+                      },
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.85rem', mr: 0.5, alignItems: 'center' }}>Tiếp tục</Typography>
+                    <IconArrowRight size={14} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+          </Box>
+
+          {/* Bên phải: Danh sách câu hỏi trong nhóm hiện tại */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.5,
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+            }}
+          >
+            {currentQuestions.map((question, idx) => {
+              const globalIndex = (currentPage - 1) * questionsPerPage + idx;
+              const isAnswered = !!userAnswers[question.question_id];
+              const isFlagged = flaggedQuestions.includes(question.question_id);
+
+              return (
+                <Tooltip key={question.question_id} title={`Câu ${globalIndex + 1}`}>
+                  <Box
+                    onClick={() => !isTimeUp && scrollToQuestion(question.question_id)}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                      border: '1px solid',
+                      borderColor: isFlagged ? '#ff4444' : isAnswered ? '#4CAF50' : 'rgba(255,255,255,0.5)',
+                      bgcolor: isAnswered ? '#4CAF50' : isFlagged ? 'rgba(244, 67, 54, 0.3)' : 'transparent',
+                      color: isAnswered || isFlagged ? 'white' : 'white',
+                      fontSize: '0.9rem',
+                      fontWeight: isFlagged ? 'bold' : 'normal',
+                      cursor: isTimeUp ? 'default' : 'pointer',
+                      transition: 'all 0.2s',
+                      position: 'relative',
+                      opacity: isTimeUp ? 0.6 : 1,
+                      '&:hover': {
+                        bgcolor: isTimeUp ? '' : isAnswered ? '#45a049' : isFlagged ? 'rgba(244, 67, 54, 0.5)' : 'rgba(255,255,255,0.3)',
+                      },
+                    }}
+                  >
+                    {globalIndex + 1}
+                    {isFlagged && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -3,
+                          right: -3,
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: '#ff4444',
+                          border: '1px solid white',
+                        }}
+                      />
+                    )}
+                  </Box>
+                </Tooltip>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
+
   const renderDialogs = () => {
     return (
       <>
@@ -996,7 +1283,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
     );
   };
 
-  // Giao diện fullscreen (giữ nguyên)
+  // Giao diện fullscreen
   if (fullscreen) {
     return (
       <>
@@ -1180,6 +1467,9 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                     />
                   </Box>
                 </Box>
+
+                {/* Dòng 3: Navigation */}
+                {questionsPerPage === 1 ? renderSinglePageNavigationFullscreen() : renderMultiPageNavigationFullscreen()}
               </Paper>
 
               <Box
@@ -1205,23 +1495,74 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
     );
   }
 
-  // Giao diện bình thường - COMPACT MODE (chỉ giảm kích thước, không thay đổi bố cục)
+  // Giao diện bình thường
   return (
     <>
       <Box
         sx={{
           display: 'flex',
-          height: '100vh',
+          height: isCompactMode ? '130vh' : '105vh',
           gap: isCompactMode ? 1 : 2,
-          flexDirection: { xs: 'column', md: 'row' },
+          flexDirection: isCompactMode ? 'column' : 'row',
           position: 'relative',
-          p: isCompactMode ? 0.5 : 2,
+          p: isCompactMode ? 0 : 2,
         }}
       >
+        {/* Compact mode sidebar - HIỂN THỊ Ở TRÊN */}
+        {isCompactMode && (
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              bgcolor: 'white',
+              boxShadow: 3,
+              borderRadius: 2,
+              p: 1.5,
+              flexShrink: 0,
+            }}
+          >
+            {/* Thời gian */}
+            {timeLeft !== null && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" fontWeight="bold">
+                  Thời gian:
+                </Typography>
+                <Chip
+                  label={formatTime(timeLeft)}
+                  color={timeLeft < 300 ? 'error' : 'primary'}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Buttons */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {enableSaveProgress && (
+                <Button onClick={() => handleSaveConfirm(false)} variant="contained" color="primary" disabled={savingProgress} startIcon={<IconDeviceFloppy size={16} />} size="small" sx={{ fontSize: '0.8rem' }}>
+                  {savingProgress ? 'Đang lưu...' : 'Lưu'}
+                </Button>
+              )}
+              <Button variant="contained" color="success" onClick={() => setShowSubmitDialog(true)} size="small" sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                Nộp bài
+              </Button>
+              <Button variant="outlined" color="primary" onClick={() => handleExitWithoutSave()} size="small" sx={{ fontSize: '0.8rem' }}>
+                Thoát
+              </Button>
+            </Box>
+          </Box>
+        )}
+
         <Box
           ref={containerRef}
           sx={{
-            flex: 3,
+            flex: isCompactMode ? 1 : 3,
+            width: isCompactMode ? '100%' : 'auto',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -1233,7 +1574,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
             overflowY: 'auto',
           }}
         >
-          {/* Header compact - nhỏ hơn trong compact mode */}
+          {/* Header compact */}
           <Paper
             sx={{
               p: isCompactMode ? 1 : 1.5,
@@ -1269,6 +1610,7 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                   whiteSpace: 'nowrap',
                   textTransform: 'uppercase',
                 }}
+                className="dark:text-white"
               >
                 {quiz.title}
               </Typography>
@@ -1291,10 +1633,11 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
               </Box>
             </Box>
 
-            {renderSinglePageNavigation()}
+            {/* Dòng 2: Navigation */}
+            {questionsPerPage === 1 ? renderSinglePageNavigation() : renderMultiPageNavigationNormal()}
           </Paper>
 
-          {/* Questions area - giữ nguyên padding nhưng nhỏ hơn */}
+          {/* Questions area */}
           <Box
             sx={{
               flex: 1,
@@ -1308,7 +1651,6 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
           </Box>
         </Box>
 
-        {/* Sidebar - CHỈ HIỆN KHI KHÔNG PHẢI COMPACT MODE */}
         {!isCompactMode && (
           <Box
             sx={{
@@ -1379,7 +1721,8 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
               </Box>
             </Box>
 
-            <Box sx={{ p: 3 }}>
+            {/* Danh sách câu hỏi */}
+            <Box sx={{ p: 3, overflow: 'auto' }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, fontSize: '1rem', color: '#333' }}>
                 Câu hỏi
               </Typography>
@@ -1453,73 +1796,6 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
           </Box>
         )}
 
-        {/* Trong compact mode, hiển thị sidebar đơn giản chỉ có thời gian và nút nộp bài */}
-        {isCompactMode && (
-          <Box
-            sx={{
-              flex: 0.5, // Chiếm ít không gian hơn
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'white',
-              boxShadow: 3,
-              overflow: 'hidden',
-              borderRadius: 2,
-              p: 2,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            {/* Hiển thị thời gian nổi bật */}
-            {timeLeft !== null && (
-              <Box sx={{ textAlign: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold" color="primary">
-                  {formatTime(timeLeft)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Thời gian còn lại
-                </Typography>
-              </Box>
-            )}
-
-            {/* Nút nộp bài nổi bật */}
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => setShowSubmitDialog(true)}
-              sx={{
-                width: '100%',
-                mb: 1.5,
-                py: 1.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-              }}
-            >
-              Nộp bài
-            </Button>
-
-            {/* Nút thoát */}
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => handleExitWithoutSave()}
-              sx={{
-                width: '100%',
-                py: 1,
-              }}
-            >
-              Thoát
-            </Button>
-
-            {/* Nút lưu tiến trình (nếu được bật) */}
-            {enableSaveProgress && (
-              <Button sx={{ width: '100%', mt: 1.5 }} onClick={() => handleSaveConfirm(false)} variant="contained" color="primary" disabled={savingProgress} startIcon={<IconDeviceFloppy size={16} />}>
-                {savingProgress ? 'Đang lưu...' : 'Lưu tiến trình'}
-              </Button>
-            )}
-          </Box>
-        )}
-
-        {/* Footer - chỉ hiện khi KHÔNG PHẢI compact mode */}
         {!isCompactMode && (
           <Box
             sx={{
@@ -1583,7 +1859,17 @@ export default function LessonQuizTaker({ quizId, onClose, onComplete, questions
                   )}
                 </Box>
 
-                <Button sx={{ borderRadius: '40px', padding: '14px' }} onClick={() => handleSaveConfirm(false)} variant="contained" color="primary" disabled={savingProgress} startIcon={<IconDeviceFloppy size={16} />}>
+                <Button
+                  sx={{
+                    borderRadius: '40px',
+                    padding: '14px',
+                  }}
+                  onClick={() => handleSaveConfirm(false)}
+                  variant="contained"
+                  color="primary"
+                  disabled={savingProgress}
+                  startIcon={<IconDeviceFloppy size={16} />}
+                >
                   {savingProgress ? 'Đang lưu...' : 'Lưu tiến trình'}
                 </Button>
               </Box>
