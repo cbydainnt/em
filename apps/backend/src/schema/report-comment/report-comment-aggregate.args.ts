@@ -1,0 +1,40 @@
+import { Field } from '@nestjs/graphql';
+import { ArgsType } from '@nestjs/graphql';
+import { ReportCommentWhereInput } from './report-comment-where.input';
+import { Type } from 'class-transformer';
+import { ReportCommentOrderByWithRelationInput } from './report-comment-order-by-with-relation.input';
+import { Prisma } from '@prisma/client';
+import { ReportCommentWhereUniqueInput } from './report-comment-where-unique.input';
+import { Int } from '@nestjs/graphql';
+import { ReportCommentCountAggregateInput } from './report-comment-count-aggregate.input';
+import { ReportCommentMinAggregateInput } from './report-comment-min-aggregate.input';
+import { ReportCommentMaxAggregateInput } from './report-comment-max-aggregate.input';
+
+@ArgsType()
+export class ReportCommentAggregateArgs {
+
+    @Field(() => ReportCommentWhereInput, {nullable:true})
+    @Type(() => ReportCommentWhereInput)
+    where?: ReportCommentWhereInput;
+
+    @Field(() => [ReportCommentOrderByWithRelationInput], {nullable:true})
+    orderBy?: Array<ReportCommentOrderByWithRelationInput>;
+
+    @Field(() => ReportCommentWhereUniqueInput, {nullable:true})
+    cursor?: Prisma.AtLeast<ReportCommentWhereUniqueInput, 'comment_id'>;
+
+    @Field(() => Int, {nullable:true})
+    take?: number;
+
+    @Field(() => Int, {nullable:true})
+    skip?: number;
+
+    @Field(() => ReportCommentCountAggregateInput, {nullable:true})
+    _count?: ReportCommentCountAggregateInput;
+
+    @Field(() => ReportCommentMinAggregateInput, {nullable:true})
+    _min?: ReportCommentMinAggregateInput;
+
+    @Field(() => ReportCommentMaxAggregateInput, {nullable:true})
+    _max?: ReportCommentMaxAggregateInput;
+}

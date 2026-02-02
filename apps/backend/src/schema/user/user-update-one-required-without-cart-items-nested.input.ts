@@ -1,0 +1,33 @@
+import { Field } from '@nestjs/graphql';
+import { InputType } from '@nestjs/graphql';
+import { UserCreateWithoutCartItemsInput } from './user-create-without-cart-items.input';
+import { Type } from 'class-transformer';
+import { UserCreateOrConnectWithoutCartItemsInput } from './user-create-or-connect-without-cart-items.input';
+import { UserUpsertWithoutCartItemsInput } from './user-upsert-without-cart-items.input';
+import { Prisma } from '@prisma/client';
+import { UserWhereUniqueInput } from './user-where-unique.input';
+import { UserUpdateToOneWithWhereWithoutCartItemsInput } from './user-update-to-one-with-where-without-cart-items.input';
+
+@InputType()
+export class UserUpdateOneRequiredWithoutCartItemsNestedInput {
+
+    @Field(() => UserCreateWithoutCartItemsInput, {nullable:true})
+    @Type(() => UserCreateWithoutCartItemsInput)
+    create?: UserCreateWithoutCartItemsInput;
+
+    @Field(() => UserCreateOrConnectWithoutCartItemsInput, {nullable:true})
+    @Type(() => UserCreateOrConnectWithoutCartItemsInput)
+    connectOrCreate?: UserCreateOrConnectWithoutCartItemsInput;
+
+    @Field(() => UserUpsertWithoutCartItemsInput, {nullable:true})
+    @Type(() => UserUpsertWithoutCartItemsInput)
+    upsert?: UserUpsertWithoutCartItemsInput;
+
+    @Field(() => UserWhereUniqueInput, {nullable:true})
+    @Type(() => UserWhereUniqueInput)
+    connect?: Prisma.AtLeast<UserWhereUniqueInput, 'id' | 'email' | 'googleId'>;
+
+    @Field(() => UserUpdateToOneWithWhereWithoutCartItemsInput, {nullable:true})
+    @Type(() => UserUpdateToOneWithWhereWithoutCartItemsInput)
+    update?: UserUpdateToOneWithWhereWithoutCartItemsInput;
+}
