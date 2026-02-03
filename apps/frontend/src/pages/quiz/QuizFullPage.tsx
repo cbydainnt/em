@@ -151,8 +151,16 @@ export default function QuizFullPage() {
   }
 
   return (
-    <DefaultLayout>
-      <Container disableGutters maxWidth={false} sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <DefaultLayout hideSidebarToggle>
+      <Container
+        disableGutters
+        maxWidth={false}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          py: 2,
+        }}
+      >
         {/* Nội dung chính */}
         <Box
           sx={{
@@ -202,7 +210,7 @@ export default function QuizFullPage() {
           )}
 
           {quizMode === 'detail' && quizResult && (
-            <Box sx={{ p: 0 }}>
+            <Box sx={{ px: { xs: 2, md: 6 }, py: 1 }}>
               <QuizResultDetail
                 quizId={quizResult.quiz_id || quizId!}
                 progressId={quizResult.progress_id}

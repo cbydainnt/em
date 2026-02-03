@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { AccessTime, Cancel, CheckCircle } from '@mui/icons-material';
 import { useThemeStore } from '@/hooks/useThemeEventStore';
+
 interface ScoreCircleProps {
   score?: number;
   text?: string;
@@ -29,6 +30,11 @@ interface QuizResultSummaryProps {
     attempts: number;
     attemptNumber: number;
     time_spent?: number;
+    answers?: Array<{
+      question_id: string;
+      is_correct: boolean;
+      selected_answer_ids: string[];
+    }>;
   };
   quiz: {
     quiz_id: string;
@@ -44,13 +50,6 @@ interface QuizResultSummaryProps {
 }
 
 export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail }: QuizResultSummaryProps) {
-  // const formatTime = (seconds?: number) => {
-  //   if (!seconds) return '--:--';
-  //   const mins = Math.floor(seconds / 60);
-  //   const secs = seconds % 60;
-  //   return `${mins}:${secs.toString().padStart(2, '0')}`;
-  // };
-
   const getType = (score: number) => {
     if (score >= 8) return 'Giỏi';
     if (score >= 6.5) return 'Khá';
@@ -58,8 +57,6 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
     return 'Yếu';
   };
 
-  // const isPassed = result.passed;
-  // const percentage = Math.round(result.percentage);
   const { authData } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -67,27 +64,29 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
   const open = Boolean(anchorEl);
   const { fetchTheme } = useThemeStore();
 
+  const answeredCount = result.answers?.length || 0;
+  const correctCount = result.correct_answers;
+  const incorrectCount = result.answers?.filter((a) => !a.is_correct).length || 0;
+  const unansweredCount = result.total_questions - answeredCount;
+
   useEffect(() => {
     fetchTheme();
   }, []);
 
   function formatISOString(input: string): string {
     const d = new Date(input);
-
     const pad = (n: number) => String(n).padStart(2, '0');
-
     const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
     return `${time} ${date}`;
   }
+
   const handleOpenAttempts = async (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
 
     try {
       const res = await axios.get(`/api/quiz/${quiz.quiz_id}/results`);
       const sortedAttempts = [...(res.data || [])].sort((a, b) => b.attemptNumber - a.attemptNumber);
-
       setAttempts(sortedAttempts);
     } catch (err) {
       console.error(err);
@@ -99,7 +98,6 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
   };
 
   function ScoreCircle({ score, text, maxScore = 10, size = 150, thickness = 4, color = '#3f51b5', defaultPercentage = 75 }: ScoreCircleProps) {
-    // Tính percentage: nếu có score thì tính theo score, không thì dùng defaultPercentage
     const percentage = score !== undefined ? (score / maxScore) * 100 : defaultPercentage;
 
     return (
@@ -172,7 +170,6 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
                 gap: 0.3,
               }}
             >
-              {/* Số nguyên */}
               <Typography
                 component="span"
                 sx={{
@@ -187,7 +184,6 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
                 {Math.floor(score)}
               </Typography>
 
-              {/* Dấu chấm */}
               <Typography
                 component="span"
                 sx={{
@@ -202,7 +198,6 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
                 .
               </Typography>
 
-              {/* Số thập phân */}
               <Typography
                 component="span"
                 sx={{
@@ -228,103 +223,129 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
       sx={{
         bgcolor: 'rgb(var(--bg-primary))',
         borderRadius: 2,
-        overflow: 'hidden',
-        height: '90vh',
+        overflow: 'visible',
         display: 'flex',
         flexDirection: 'column',
-        position: 'sticky',
         boxShadow: 'none',
       }}
     >
       <Box
         sx={{
-          width: 1000,
+          width: '100%',
+          maxWidth: { xs: '100%', sm: '95%', md: 900, lg: 1000 },
           margin: 'auto',
-          p: 2,
-          flex: 1,
-          overflowY: 'auto',
+          p: { xs: 1, sm: 1.5, md: 2 },
           border: '1px solid #e0e0e0',
           borderRadius: 2,
           boxShadow: '0px 1px 3px rgba(0,0,0,0.08)',
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: '#c1c1c1',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#a8a8a8',
-          },
         }}
       >
-        <Box sx={{ display: 'flex' }}>
-          <Typography sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+        {/* Header */}
+        <Box sx={{ mb: { xs: 1, sm: 1.5 } }}>
+          <Typography
+            sx={{
+              fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' },
+              lineHeight: 1.4,
+            }}
+          >
             Chúc mừng,{' '}
-            <Typography component="span" sx={{ fontWeight: 700, fontSize: 26 }}>
+            <Typography
+              component="span"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '1rem', sm: '1.3rem', md: '1.6rem' },
+              }}
+            >
               {authData?.name || 'admin'}
-            </Typography>
+            </Typography>{' '}
             đã hoàn thành bài thi
           </Typography>
         </Box>
-        <Divider sx={{ my: 1 }} />
+
+        <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
+
+        {/* Score display */}
         <Box
           display="flex"
           alignItems="center"
           justifyContent="center"
-          gap={10}
+          gap={{ xs: 2, sm: 4, md: 8 }}
           sx={{
-            padding: 2,
+            padding: { xs: 1, sm: 1.5, md: 2 },
             borderRadius: 2,
             flexDirection: { xs: 'column', sm: 'row' },
-            flexWrap: 'wrap',
             textAlign: 'center',
           }}
         >
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <Typography variant="body1" sx={{ minWidth: 60, fontWeight: 500 }}>
+          {/* Điểm chính */}
+          <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' },
+              }}
+            >
               Điểm
             </Typography>
-            <ScoreCircle score={result.score} size={200} color="#3f51b5" />
+            <ScoreCircle score={result.score} size={window.innerWidth < 600 ? 140 : window.innerWidth < 960 ? 160 : 200} color="#3f51b5" />
           </Box>
 
-          <Box display="flex" flexDirection="column" gap={2}>
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <Typography variant="body1" sx={{ minWidth: 60, fontWeight: 500 }}>
+          {/* Loại & Đúng */}
+          <Box display="flex" flexDirection={{ xs: 'row', sm: 'column' }} gap={{ xs: 3, sm: 2 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' },
+                }}
+              >
                 Loại
               </Typography>
-              <ScoreCircle text={getType(result.score)} size={80} defaultPercentage={75} color="#3f51b5" thickness={4} />
+              <ScoreCircle text={getType(result.score)} size={window.innerWidth < 600 ? 65 : 80} defaultPercentage={75} color="#3f51b5" thickness={4} />
             </Box>
 
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <Typography variant="body1" sx={{ minWidth: 60, fontWeight: 500 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' },
+                }}
+              >
                 Đúng
               </Typography>
-              <ScoreCircle text={`${result.percentage}%`} size={80} defaultPercentage={80.45} color="#3f51b5" thickness={4} />
+              <ScoreCircle text={`${Math.round(result.percentage)}%`} size={window.innerWidth < 600 ? 65 : 80} defaultPercentage={result.percentage} color="#3f51b5" thickness={4} />
             </Box>
           </Box>
         </Box>
-        <Divider sx={{ my: 1 }} />
 
-        <Box sx={{ mb: 3 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
+        <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
+
+        {/* Lượt thi */}
+        <Box sx={{ mb: { xs: 1.5, sm: 2, md: 3 } }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={{ xs: 0.5, sm: 1 }}>
             <Typography
               variant="subtitle2"
               sx={{
                 fontWeight: 700,
-                fontSize: '0.875rem',
+                fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
                 color: 'text.primary',
                 letterSpacing: '0.05em',
               }}
             >
               LƯỢT THI
             </Typography>
-            <IconButton size="small" sx={{ color: 'text.secondary' }} onClick={handleOpenAttempts}>
-              <IconClock fontSize="small" />
+            <IconButton
+              size="small"
+              sx={{
+                color: 'text.secondary',
+                p: { xs: 0.5, sm: 1 },
+              }}
+              onClick={handleOpenAttempts}
+            >
+              <IconClock size={window.innerWidth < 600 ? 16 : 20} />
             </IconButton>
           </Box>
 
@@ -333,7 +354,8 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
               variant="body2"
               sx={{
                 color: 'text.secondary',
-                minWidth: 80,
+                fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                minWidth: { xs: 50, sm: 60, md: 80 },
               }}
             >
               Lần thứ
@@ -343,6 +365,7 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
               sx={{
                 fontWeight: 600,
                 color: 'text.primary',
+                fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' },
               }}
             >
               {result.attempts}
@@ -350,183 +373,231 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
           </Box>
         </Box>
 
-        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        <Divider sx={{ borderStyle: 'dashed', my: { xs: 1, sm: 1.5, md: 2 } }} />
 
-        <Box sx={{ mb: 3 }}>
+        {/* Thời gian */}
+        <Box sx={{ mb: { xs: 1.5, sm: 2, md: 3 } }}>
           <Typography
             variant="subtitle2"
             sx={{
               fontWeight: 700,
-              fontSize: '0.875rem',
+              fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
               color: 'text.primary',
               letterSpacing: '0.05em',
-              mb: 1.5,
+              mb: { xs: 0.5, sm: 1 },
             }}
           >
             THỜI GIAN
           </Typography>
 
-          {/* Bắt đầu */}
-          <Box display="flex" alignItems="center" gap={1} mb={1}>
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                minWidth: 80,
-              }}
-            >
-              Bắt đầu
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 500,
-                color: 'text.primary',
-              }}
-            >
-              {formatISOString(result.completed_at)}
-            </Typography>
-          </Box>
+          <Stack spacing={{ xs: 0.5, sm: 0.75, md: 1 }}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  minWidth: { xs: 50, sm: 60, md: 80 },
+                }}
+              >
+                Bắt đầu
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  color: 'text.primary',
+                  fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' },
+                }}
+              >
+                {formatISOString(result.completed_at)}
+              </Typography>
+            </Box>
 
-          {/* Nộp bài */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                minWidth: 80,
-              }}
-            >
-              Nộp bài
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 500,
-                color: 'text.primary',
-              }}
-            >
-              {formatISOString(result.completed_at)}
-            </Typography>
-          </Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  minWidth: { xs: 50, sm: 60, md: 80 },
+                }}
+              >
+                Nộp bài
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  color: 'text.primary',
+                  fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' },
+                }}
+              >
+                {formatISOString(result.completed_at)}
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
 
-        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        <Divider sx={{ borderStyle: 'dashed', my: { xs: 1, sm: 1.5, md: 2 } }} />
 
-        <Box>
+        {/* Câu trả lời */}
+        <Box sx={{ mb: { xs: 1.5, sm: 2, md: 3 } }}>
           <Typography
             variant="subtitle2"
             sx={{
               fontWeight: 700,
-              fontSize: '0.875rem',
+              fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
               color: 'text.primary',
               letterSpacing: '0.05em',
-              mb: 2,
+              mb: { xs: 1, sm: 1.5, md: 2 },
             }}
           >
             CÂU TRẢ LỜI
           </Typography>
 
-          <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+          <Box
+            display="grid"
+            gridTemplateColumns={{
+              xs: '1fr',
+              sm: 'repeat(3, 1fr)',
+            }}
+            gap={{ xs: 1, sm: 1.5, md: 2 }}
+          >
             {/* Số câu đúng */}
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box display="flex" alignItems="center" justifyContent="flex-start" gap={1}>
               <Typography
                 variant="body2"
                 sx={{
                   color: 'text.secondary',
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Số câu đúng
               </Typography>
               <Chip
-                label={result.correct_answers}
+                label={correctCount}
                 size="small"
                 sx={{
                   bgcolor: '#4caf50',
                   color: 'white',
                   fontWeight: 700,
-                  fontSize: '0.875rem',
-                  height: 28,
-                  minWidth: 36,
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  height: { xs: 22, sm: 24, md: 28 },
+                  minWidth: { xs: 28, sm: 32, md: 36 },
                 }}
               />
             </Box>
 
             {/* Số câu sai */}
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box display="flex" alignItems="center" justifyContent="flex-start" gap={1}>
               <Typography
                 variant="body2"
                 sx={{
                   color: 'text.secondary',
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Số câu sai
               </Typography>
               <Chip
-                label={result.total_questions - result.correct_answers}
+                label={incorrectCount}
                 size="small"
                 sx={{
                   bgcolor: '#f44336',
                   color: 'white',
                   fontWeight: 700,
-                  fontSize: '0.875rem',
-                  height: 28,
-                  minWidth: 36,
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  height: { xs: 22, sm: 24, md: 28 },
+                  minWidth: { xs: 28, sm: 32, md: 36 },
                 }}
               />
             </Box>
 
             {/* Câu chưa làm */}
-            <Box display="flex" alignItems="center" gap={1.5}>
+            <Box display="flex" alignItems="center" justifyContent="flex-start" gap={1}>
               <Typography
                 variant="body2"
                 sx={{
                   color: 'text.secondary',
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Câu chưa làm
               </Typography>
               <Chip
-                label={0}
+                label={unansweredCount}
                 size="small"
                 sx={{
                   bgcolor: '#424242',
                   color: 'white',
                   fontWeight: 700,
-                  fontSize: '0.875rem',
-                  height: 28,
-                  minWidth: 36,
+                  fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
+                  height: { xs: 22, sm: 24, md: 28 },
+                  minWidth: { xs: 28, sm: 32, md: 36 },
                 }}
               />
             </Box>
           </Box>
         </Box>
 
-        <Divider sx={{ borderStyle: 'dashed', my: 2 }} />
+        <Divider sx={{ borderStyle: 'dashed', my: { xs: 1, sm: 1.5, md: 2 } }} />
 
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          width="100%"
-          sx={{
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: { xs: 2, sm: 0 },
-          }}
-        >
-          <Box display="flex" gap={2}>
-            <Button onClick={() => onViewDetail(result.attempts)} variant="contained" sx={{ borderRadius: 999, backgroundColor: '#2f7567' }}>
+        {/* Buttons */}
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} spacing={{ xs: 1, sm: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 2 }}>
+            <Button
+              onClick={() => onViewDetail(result.attempts)}
+              variant="contained"
+              fullWidth={window.innerWidth < 600}
+              sx={{
+                borderRadius: 999,
+                backgroundColor: '#2f7567',
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.875rem' },
+                px: { xs: 2, sm: 2.5, md: 3 },
+                py: { xs: 0.75, sm: 1 },
+                minWidth: { sm: 100 },
+              }}
+            >
               Chi tiết
             </Button>
-            <Button onClick={onRetake} variant="contained" sx={{ borderRadius: 999, backgroundColor: '#2f7567' }}>
+            <Button
+              onClick={onRetake}
+              variant="contained"
+              fullWidth={window.innerWidth < 600}
+              sx={{
+                borderRadius: 999,
+                backgroundColor: '#2f7567',
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.875rem' },
+                px: { xs: 2, sm: 2.5, md: 3 },
+                py: { xs: 0.75, sm: 1 },
+                minWidth: { sm: 100 },
+              }}
+            >
               Làm lại
             </Button>
-          </Box>
+          </Stack>
 
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')} variant="contained" sx={{ borderRadius: 999, backgroundColor: '#3f51b5' }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/')}
+            variant="contained"
+            fullWidth={window.innerWidth < 600}
+            sx={{
+              borderRadius: 999,
+              backgroundColor: '#3f51b5',
+              fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.875rem' },
+              px: { xs: 2, sm: 2.5, md: 3 },
+              py: { xs: 0.75, sm: 1 },
+              minWidth: { sm: 120 },
+            }}
+          >
             Về trang chủ
           </Button>
-        </Box>
+        </Stack>
       </Box>
       <Popover
         open={open}
@@ -536,13 +607,14 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{
           sx: {
-            width: { xs: '90vw', sm: 360 },
+            width: { xs: '90vw', sm: 400, md: 450 },
+            maxWidth: '100%',
             maxHeight: '70vh',
           },
         }}
       >
-        <Box sx={{ p: 2, width: 360 }}>
-          <Typography sx={{ fontWeight: 700, mb: 1.5 }}>Lịch sử làm bài</Typography>
+        <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+          <Typography sx={{ fontWeight: 700, mb: 1.5, fontSize: { xs: '0.9rem', sm: '1rem' } }}>Lịch sử làm bài</Typography>
 
           <Stack spacing={1}>
             {attempts.map((a) => (
@@ -550,7 +622,7 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
                 key={a.progress_id}
                 variant="outlined"
                 sx={{
-                  p: 1.5,
+                  p: { xs: 1, sm: 1.5 },
                   borderRadius: 2,
                   cursor: 'pointer',
                   '&:hover': { bgcolor: '#f5f7fa' },
@@ -560,41 +632,41 @@ export default function QuizResultSummary({ result, quiz, onRetake, onViewDetail
                   onViewDetail(a.attemptNumber);
                 }}
               >
-                {/* Header */}
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography fontWeight={600}>Lần {a.attemptNumber}</Typography>
-
-                  <Chip size="small" icon={a.passed ? <CheckCircle /> : <Cancel />} label={a.passed ? 'Đậu' : 'Rớt'} color={a.passed ? 'success' : 'error'} />
+                  <Typography fontWeight={600} sx={{ fontSize: { xs: '0.85rem', sm: '1rem' } }}>
+                    Lần {a.attemptNumber}
+                  </Typography>
+                  <Chip size="small" icon={a.passed ? <CheckCircle /> : <Cancel />} label={a.passed ? 'Đậu' : 'Rớt'} color={a.passed ? 'success' : 'error'} sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }} />
                 </Box>
 
-                {/* Score */}
-                <Typography sx={{ fontWeight: 700, fontSize: 18, mt: 0.5 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 }, mt: 0.5 }}>
                   {a.score} điểm • {a.percentage}%
                 </Typography>
 
-                {/* Details */}
-                <Stack direction="row" spacing={1} mt={0.5} alignItems="center">
-                  <Typography variant="caption">
+                <Stack direction="row" spacing={1} mt={0.5} alignItems="center" flexWrap="wrap">
+                  <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                     Đúng {a.correct_answers}/{a.total_questions}
                   </Typography>
 
                   {a.time_spent && (
                     <>
                       <Typography variant="caption">•</Typography>
-                      <AccessTime sx={{ fontSize: 14 }} />
-                      <Typography variant="caption">{Math.floor(a.time_spent / 60)}p</Typography>
+                      <AccessTime sx={{ fontSize: { xs: 12, sm: 14 } }} />
+                      <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+                        {Math.floor(a.time_spent / 60)}p
+                      </Typography>
                     </>
                   )}
                 </Stack>
 
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                   {formatISOString(a.completed_at)}
                 </Typography>
               </Paper>
             ))}
 
             {attempts.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.85rem', sm: '0.875rem' } }}>
                 Chưa có lịch sử làm bài
               </Typography>
             )}
